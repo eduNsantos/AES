@@ -80,10 +80,8 @@ for column in range(4):
         bin_key_letter = str_to_bin(bin_key_letter)
 
         # print(bin_phrase_letter)
-a = str_to_bin('04')
-print(a)
-print(str(a, 'ascii'))
-print(str_to_bin('a0'))
+print('a')
+print(int('a', 16))
 # teste = binascii.hexlify(bytes(teste, 'ascii'))
 # teste = binascii.unhexlify(int(teste, 2))
 # print(teste)
