@@ -35,10 +35,19 @@ class AES:
 
         for row in range(4):
             for char in range(4):
-                password_matrix[row][char] = hex(self.str_to_base_16(password_matrix[row][char]))
-                key_matrix[row][char] = hex(self.str_to_base_16(key_matrix[row][char]))
+                password_matrix[row][char] = self.str_to_base_16(password_matrix[row][char])
+                key_matrix[row][char] = self.str_to_base_16(key_matrix[row][char])
 
         return
+
+    def get_hex_password(self):
+        password_matrix = self.password_matrix.copy()
+
+        for row in range(4):
+            for char in range(4):
+                password_matrix[row][char] = hex(password_matrix[row][char])
+
+        return password_matrix
 
     def set_key(self, key):
         self.key = key
@@ -90,10 +99,11 @@ key = 'keys are boring1'
 aes = AES(password, key)
 
 
-for x in range(3):
-    print(aes.password_matrix)
-    print(aes.key_matrix)
-    aes.add_round_key()
+# for x in range(3):
+aes.add_round_key()
+print(aes.password_matrix)
+print(aes.get_hex_password())
+# print(aes.key_matrix)
 
 # Xor em prática funcionando
 # print(hex(0x04 ^ 0xa0))
