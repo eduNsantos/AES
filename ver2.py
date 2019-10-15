@@ -4,11 +4,10 @@ class AES:
     def __init__(self, password, key):
         self.key = key
         self.password = password
-
         self.password_matrix = self.make_matrix(password)
         self.key_matrix = self.make_matrix(key)
 
-        self.Sbox = (
+        self.s_box = (
             0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
             0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
             0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
@@ -27,9 +26,63 @@ class AES:
             0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
         )
 
-        
+    def sub_bytes(self):
+        message = [
+            [0x19, 0xa0, 0x9a, 0xe9],
+            [0x3d, 0xf4, 0xc6, 0xf8],
+            [0xe3, 0xe2, 0x8d, 0x48],
+            [0xbe, 0x2b, 0x2a, 0x08],
+        ]
 
+        for row in range(4):
+            for char in range(4):
+                current_char = message[row][char]
+                hex_val = hex(current_char).replace('0x', '')
+
+                if len(hex_val) == 1:
+                    first = hex(0)
+                    second = hex_val[0]
+                else:
+                    first = hex_val[0]
+                    second = hex_val[1]
+
+                first_pos = self.search_x(int(first, 16))
+                second_pos = self.search_y(int(second, 16))
+                message[row][char] = hex(self.s_box[first_pos + second_pos])
+
+        return message
+
+    def search_x(self, search_hex):
+        position_hex = 0
+        cont = 0
+        while position_hex <= 256:
+            if cont == search_hex:
+                break
+            position_hex += 16
+            cont += 1
+
+        return position_hex
+
+    
+    def search_y(self, search_hex):
+        position_hex = 0
+        cont = 0
+        while position_hex <= 16:
+            if cont == search_hex:
+                break
+            position_hex += 1
+            cont += 1
+
+        return position_hex
+    # Incompleto
     def add_round_key(self):
+        for row in range(4):
+            for char in range(4):
+                self.round_key = self.password_matrix[row][char] ^ self.key_matrix[row][char]
+
+        return
+
+    def matrix_to_base_16(self):
         password_matrix = self.password_matrix
         key_matrix = self.key_matrix
 
@@ -40,35 +93,10 @@ class AES:
 
         return
 
-    def get_hex_password(self):
-        password_matrix = self.password_matrix.copy()
+    def str_to_base_16(self, string):
+        string = string.encode('utf-8')
 
-        for row in range(4):
-            for char in range(4):
-                password_matrix[row][char] = hex(password_matrix[row][char])
-
-        return password_matrix
-
-    def set_key(self, key):
-        self.key = key
-        return self
-    
-    def get_key(self):
-        if hasattr(self, 'key'):
-            return self.key
-        else:
-            return "use o método setKey"
-
-    def set_password(self, password):
-        self.password = password
-        return self
-    
-    def get_password(self):
-        if hasattr(self, 'password'):
-            return self.password
-        else:
-            return "use o método setPassword"
-
+        return int(string.hex(), 16)
 
     def make_matrix(self, str):
         matrix = []
@@ -88,22 +116,10 @@ class AES:
 
         return xor
 
-    def str_to_base_16(self, string):
-        string = string.encode('utf-8')
-
-        return int(string.hex(), 16)
-
 password = 'buy me some potato chips please'        
 key = 'keys are boring1'
 
 aes = AES(password, key)
-
-
-# for x in range(3):
-aes.add_round_key()
-print(aes.password_matrix)
-print(aes.get_hex_password())
-# print(aes.key_matrix)
-
+print(aes.sub_bytes())
 # Xor em prática funcionando
 # print(hex(0x04 ^ 0xa0))
