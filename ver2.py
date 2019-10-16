@@ -74,6 +74,7 @@ class AES:
             cont += 1
 
         return position_hex
+
     # Incompleto
     def add_round_key(self):
         for row in range(4):
@@ -98,13 +99,17 @@ class AES:
 
         return int(string.hex(), 16)
 
-    def make_matrix(self, str):
+    def make_matrix(self, string):
         matrix = []
         column = 0
+
+        while len(string) < 16:
+            string += ' '
+
         for x in range(4):
             row = []
-            while column < len(str):
-                row.append(str[column])
+            while column < len(string):
+                row.append(string[column])
                 column += 1
                 if (column % 4 == 0):
                     break
@@ -116,10 +121,11 @@ class AES:
 
         return xor
 
-password = 'buy me some potato chips please'        
+password = 'eu sou eduardo'        
 key = 'keys are boring1'
 
 aes = AES(password, key)
-print(aes.sub_bytes())
+aes.matrix_to_base_16()
+print(aes.make_matrix(password))
 # Xor em prática funcionando
 # print(hex(0x04 ^ 0xa0))
