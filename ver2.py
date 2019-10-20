@@ -1,11 +1,9 @@
-import binascii
+import copy
 
 class AES:
     def __init__(self, password, key):
         self.key = key
         self.password = password
-        self.password_matrix = self.make_matrix(password)
-        self.key_matrix = self.make_matrix(key)
 
         self.s_box = (
             0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -25,6 +23,41 @@ class AES:
             0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
             0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
         )
+
+        self.encode()
+
+    def encode(self):
+        # Cria a matrix da senha e da chave
+        self.password_matrix = self.make_matrix(password)
+        self.key_matrix = self.make_matrix(key)
+        # Transforma matrix em base 16
+        self.password_matrix = self.matrix_to_base_16(self.password_matrix)
+        self.key_matrix = self.matrix_to_base_16(self.key_matrix)
+
+        self.shift_rows(self.password_matrix)
+        # print(self.password_matrix)
+        # print(self.key_matrix)
+
+        return
+
+    def shift_rows(self, target_matrix):
+        matrix_with_shifted_rows = copy.deepcopy(target_matrix)
+
+        print(matrix_with_shifted_rows)
+        # Desloca as colunas para esquerda <==
+        for row in range(1, 4):
+            current_row = matrix_with_shifted_rows[row]
+            columns_to_shift_left = len(current_row) - row
+
+            for column_to_shift_left in range(columns_to_shift_left):
+                current_row[column_to_shift_left] = current_row[column_to_shift_left + row]
+
+            # Desloca as colunas para direita ==>
+            columns_to_shift_right = len(current_row) - column_to_shift_left
+            for column_to_shift_right in range(1, columns_to_shift_right):
+                current_row[column_to_shift_left + column_to_shift_right] = target_matrix[row][column_to_shift_right - 1]
+    
+        return
 
     def sub_bytes(self):
         message = [
@@ -74,25 +107,27 @@ class AES:
             cont += 1
 
         return position_hex
-
+    
     # Incompleto
-    def add_round_key(self):
-        for row in range(4):
-            for char in range(4):
-                self.round_key = self.password_matrix[row][char] ^ self.key_matrix[row][char]
+    # def add_round_key(self):
+    #     for row in range(4):
+    #         for char in range(4):
+    #             self.round_key = self.password_matrix[row][char] ^ self.key_matrix[row][char]
 
         return
 
-    def matrix_to_base_16(self):
-        password_matrix = self.password_matrix
-        key_matrix = self.key_matrix
+    def matrix_to_base_16(self, target_matrix, return_hex = False):
 
         for row in range(4):
-            for char in range(4):
-                password_matrix[row][char] = self.str_to_base_16(password_matrix[row][char])
-                key_matrix[row][char] = self.str_to_base_16(key_matrix[row][char])
+            if return_hex:
+                for char in range(4):
+                    target_matrix[row][char] = hex(self.str_to_base_16(target_matrix[row][char]))
+            else:
+                for char in range(4):
+                    target_matrix[row][char] = self.str_to_base_16(target_matrix[row][char])
 
-        return
+        return target_matrix
+
 
     def str_to_base_16(self, string):
         string = string.encode('utf-8')
@@ -125,7 +160,5 @@ password = 'eu sou eduardo'
 key = 'keys are boring1'
 
 aes = AES(password, key)
-aes.matrix_to_base_16()
-print(aes.make_matrix(password))
 # Xor em prática funcionando
 # print(hex(0x04 ^ 0xa0))
