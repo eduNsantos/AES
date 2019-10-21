@@ -24,6 +24,13 @@ class AES:
             0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
         )
 
+        self.galois_field = [
+            [2, 3, 1, 1],
+            [1, 2, 3, 1],
+            [1, 2, 2, 3],
+            [1, 1, 3, 2]
+        ]
+
         self.encode()
 
     def encode(self):
@@ -35,15 +42,53 @@ class AES:
         self.key_matrix = self.matrix_to_base_16(self.key_matrix)
 
         self.shift_rows(self.password_matrix)
+        # Testando mix columns conforme o vídeo
+
+        sub_bytes = self.sub_bytes()
+        self.mix_columns(sub_bytes)
+        # print(self.mix_columns(sub_bytes))
         # print(self.password_matrix)
         # print(self.key_matrix)
 
         return
 
+    def g_mul(self, a, b):
+        p = 0
+        cont = 0
+        while cont < 8:  # 8 porque se trata de rodar 1 byte
+            if (b & 1) != 0:  # Sempre que esbarrar com um bit 1 xor com a (sendo que a está sendo misturado)
+                p ^= a  # simples xor de p com o valor de a
+            hiBitSet = (a & 0x80) != 0  # Verificar se "a" vai passar do limite de 1 byte
+            a <<= 1  # Aumenta a
+            if hiBitSet:  # Se "a" for passar um byte
+                a ^= 0x11B  # Faz xor com polinômio fixo (dizem que esse é um bom polinômio)
+            # print(bin(a))
+
+            b >>= 1  # Diminui um valor no bit de b para verificar o próximo bit
+            # print(bin(b))
+            cont += 1  # simples contador
+        return p  # Retorna o valor de p que foi feito até 8 vezes xor com "a" sempre que b == 1, sendo que "a" aumenta até "a" completar 8 bits então, quando "a" completa 8 bits é reduzido assim: a xor 11b
+
+    # -------- Incompleto
+    def mix_columns(self, target_matrix):
+        for row in range(4):
+            galois_field_row = self.galois_field[row]
+            current_row = target_matrix[row]
+
+            for column in range(4):
+                column_in_base_16 = int(current_row[column], 16)
+
+                final_val = 0
+                for x in range(len(galois_field_row)):
+                    print(str(galois_field_row[x]) + ' * ' + str(column_in_base_16))
+                    final_val ^= self.g_mul(galois_field_row[x], column_in_base_16)
+                print(hex(final_val))
+                break
+        return target_matrix
+
     def shift_rows(self, target_matrix):
         matrix_with_shifted_rows = copy.deepcopy(target_matrix)
 
-        print(matrix_with_shifted_rows)
         # Desloca as colunas para esquerda <==
         for row in range(1, 4):
             current_row = matrix_with_shifted_rows[row]
@@ -114,7 +159,7 @@ class AES:
     #         for char in range(4):
     #             self.round_key = self.password_matrix[row][char] ^ self.key_matrix[row][char]
 
-        return
+        # return
 
     def matrix_to_base_16(self, target_matrix, return_hex = False):
 
